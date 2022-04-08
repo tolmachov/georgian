@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/tolmachov/georgian/internal/settings"
 	"github.com/urfave/cli/v2"
+	"go.opencensus.io/plugin/ocgrpc"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/trace"
 )
@@ -35,13 +36,9 @@ func startTracer(ctx *cli.Context) {
 		return
 	}
 	view.RegisterExporter(exporter)
-	//if err := view.Register(ocgrpc.DefaultServerViews...); err != nil {
-	//	log.Fatal().Err(err).Msg("failed to register data watcher")
-	//}
-	//
-	// todo it commented: rpc error: code = InvalidArgument desc = One or more TimeSeries could not be written:
-	// One or more points were written more frequently than the maximum sampling period configured for the metric.:
-	// timeSeries[0-3] error details: name = Unknown  desc = total_point_count:4 errors:{status:{code:9} point_count:4}
+	if err := view.Register(ocgrpc.DefaultServerViews...); err != nil {
+		log.Fatal().Err(err).Msg("failed to register data watcher")
+	}
 	view.SetReportingPeriod(time.Second) // Report stats at every second.
 	trace.RegisterExporter(exporter)
 	trace.ApplyConfig(
